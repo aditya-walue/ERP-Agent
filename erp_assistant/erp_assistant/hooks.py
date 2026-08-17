@@ -16,3 +16,8 @@ scheduler_events = {
         "erp_assistant.extractor.build_index",
     ],
 }
+
+# Build all provider indices once on install, so a fresh deploy answers
+# HOWTO questions with grounded docs instead of falling through to an
+# ungrounded LLM guess (see install.py).
+after_install = "erp_assistant.install.after_install"
