@@ -1,0 +1,10 @@
+{
+  "name": "erp_assistant",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vue 3 chat frontend for the ERP Implementation Assistant",
+  "dependencies": {
+    "vue": "^3.4.0",
+    "marked": "^12.0.0"
+  }
+}
