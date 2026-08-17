@@ -11,18 +11,10 @@
       >
         <path d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"/>
       </svg>
-      <h2 class="truncate text-xs font-semibold tracking-[0.01em] sm:text-base text-white/95">ChangAI from ERPGulf</h2>
+      <h2 class="truncate text-xs font-semibold tracking-[0.01em] sm:text-base text-white/95">ERP Assistant</h2>
     </div>
 
     <div class="ml-2 flex items-center gap-1.5">
-      <span
-        class="hidden rounded-full border border-white/25 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/95 shadow-sm backdrop-blur-sm sm:inline"
-        :class="providerBadgeClass"
-        :title="`TTS provider: ${providerLabel}`"
-      >
-        {{ providerLabel }}
-      </span>
-
       <button
         class="h-8 min-w-8 appearance-none items-center justify-center rounded-md border border-white/20 px-2 text-xs font-semibold text-white/90 transition-all duration-200 focus:outline-none sm:flex"
         style="border-radius: 0.375rem;"
@@ -138,18 +130,6 @@ const nextWindowModeLabel = computed(() => {
   if (props.windowMode === 'default') return 'Half Screen'
   if (props.windowMode === 'half') return 'Full Screen'
   return 'Compact'
-})
-
-const providerLabel = computed(() => {
-  if (props.activeTtsProvider === 'polly') return 'TTS: Polly'
-  if (props.activeTtsProvider === 'browser') return 'TTS: Browser'
-  return 'TTS: Off'
-})
-
-const providerBadgeClass = computed(() => {
-  if (props.activeTtsProvider === 'polly') return 'bg-emerald-500/45'
-  if (props.activeTtsProvider === 'browser') return 'bg-amber-500/45'
-  return 'bg-slate-500/35'
 })
 
 defineEmits(['close', 'cycleResize', 'toggleAutoRead'])

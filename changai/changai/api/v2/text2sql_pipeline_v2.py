@@ -813,6 +813,98 @@ def detect_specific_entities(state: SQLState) -> SQLState:
 
 
 
+def _try_erp_assistant_for_intent(question: str, chat_id: str = None):
+    """
+    Gate on intent BEFORE changai's own SQL pipeline runs at all. Without
+    this, questions like "how do I create a Project?" get classified as an
+    ERP data query (since "Project" is a real DocType), the SQL-writing LLM
+    correctly recognizes it can't answer with data and emits a deliberately
+    empty query, and the result-formatter then improvises a generic
+    "couldn't find instructions" message with no ERP grounding — a dead end
+    that never reaches the NON_ERP branch this file already hands off to
+    erp_assistant. Only intercepts the implementation-assistant intents;
+    record lookups still go through changai's own (already-working) SQL
+    pipeline untouched.
+    """
+    try:
+        if "erp_assistant" not in frappe.get_installed_apps():
+            return None
+        from erp_assistant.agent import intent as intent_mod
+        classified = intent_mod.classify(question)
+        if classified == intent_mod.RECORD_LOOKUP:
+            return None
+        return _try_erp_assistant(question, chat_id=chat_id)
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "ChangAI -> erp_assistant intent gate failed")
+        return None
+
+
+def _recent_conversation_text(chat_id: str, max_turns: int = 6) -> str:
+    """
+    Plain-text render of the last few turns of this chat session, so
+    Troubleshooting questions ("why can't I create this Sales Invoice?")
+    can be answered against the actual error the user just saw rather than
+    a generic guess. Any turn's "ai" side can be a string or a dict (e.g.
+    {"answer": "..."} from an erp_assistant hand-off) — both are handled.
+    """
+    if not chat_id:
+        return ""
+    try:
+        from changai.changai.api.v2.store_chats import get_chat_history
+        turns = get_chat_history(chat_id) or []
+    except Exception:
+        return ""
+
+    lines = []
+    for turn in turns[-max_turns:]:
+        if "human" in turn:
+            lines.append(f"User: {turn['human']}")
+        elif "ai" in turn:
+            ai = turn["ai"]
+            if isinstance(ai, dict):
+                ai = ai.get("answer") or ai.get("error") or str(ai)
+            lines.append(f"Assistant: {ai}")
+    return "\n".join(lines)
+
+
+def _try_erp_assistant(question: str, chat_id: str = None):
+    """
+    Best-effort hand-off to the erp_assistant app's implementation-assistant
+    pipeline (intent classification + How-To/Troubleshooting/Definition/
+    Workflow providers) for questions ChangAI's own ERP-data pipeline routed
+    to NON_ERP — e.g. "how do I create a Project?" isn't a data query, but
+    it also isn't a generic non-ERP chit-chat question, and answering it
+    with an ungrounded generic-Gemini call produces plausible-sounding but
+    wrong "check with another department" style non-answers.
+
+    In-process import. (An earlier version of this ran erp_assistant in a
+    subprocess because its Gemini client used the google-genai SDK's async
+    transport, which stalled for minutes when co-imported with changai's
+    torch/langgraph stack. erp_assistant.llm now talks to Gemini via plain
+    synchronous `requests` instead, which doesn't have that problem — an
+    in-process call completes in ~4s, so the subprocess indirection is gone.)
+
+    chat_id, when given, lets erp_assistant see the last few turns of this
+    conversation — critical for Troubleshooting ("why can't I create this?"
+    right after a failed insert), where the actual error the user just saw
+    is worth far more than any retrieved documentation.
+
+    Returns the answer string, or None if erp_assistant isn't installed or
+    couldn't answer (caller falls back to its existing behavior either way).
+    """
+    try:
+        if "erp_assistant" not in frappe.get_installed_apps():
+            return None
+        from erp_assistant.agent import orchestrator
+        conversation_context = _recent_conversation_text(chat_id)
+        result = orchestrator.ask_agent(question, conversation_context=conversation_context or None)
+        answer = (result or {}).get("answer")
+        return answer or None
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "ChangAI -> erp_assistant handoff failed")
+        return None
+
+
 def routeNonErpToAI(state: SQLState):
     question= state["question"]
     sys_prompt = """You are ChangAI, an intelligent assistant powered by ERPGulf. 
@@ -820,6 +912,9 @@ The user has asked a general question that is not related to ERP.
 Answer the question clearly and helpfully.
 Always mention that you are ChangAI by ERPGulf when introducing yourself."""
     if frappe.utils.cint(state.get("sendNonErptoAI", 0)) == 1 or state.get("sendNonErptoAI") == "true":
+        erp_answer = _try_erp_assistant(question, chat_id=state.get("session_id"))
+        if erp_answer:
+            return {**state, "non_erp_res": erp_answer}
         try:
             res = call_gemini(question,sys_prompt)
             return {**state, "non_erp_res": res}
@@ -844,6 +939,13 @@ def send_non_erp_request(state: SQLState) -> SQLState:
         # response = call_model(prompt, "llm")
         if not response or not response.get("data"):
             return {**state,"non_erp_res": "", "error": str(response)}
+        if not response.get("matched"):
+            # No static FAQ entry — before giving the generic filler, see if
+            # this is actually an implementation question erp_assistant can
+            # answer (how-to / troubleshooting / definition / workflow).
+            erp_answer = _try_erp_assistant(qstn, chat_id=state.get("session_id"))
+            if erp_answer:
+                return {**state, "non_erp_res": erp_answer, "error": None}
         return {**state,"non_erp_res": response["data"], "error": None}
     except frappe.exceptions.ValidationError:
         raise
@@ -991,6 +1093,7 @@ def execute_query(sql: str, doctypes: List[str]) -> Any:
                 f'<a href="{CHANGAI_GUIDE_LINK}" target="_blank">Click here</a><br><br><a href="{ERPGULF_LINK}" target="_blank">ERPGulf.com</a>'
             )        }
     except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "ChangAI SQL Execution Error")
         return {"error": f"SQL Execution Failed: {e}\n Check Quick Start Guide Here 👇:\n {CHANGAI_GUIDE_LINK}"}
 
 
@@ -1291,6 +1394,16 @@ def run_text2sql_pipeline(
     sendNonErptoAI: bool = False
 ) -> Dict:
     memory_status = check_memory_status()
+
+    if source != "gdoc":
+        erp_assistant_answer = _try_erp_assistant_for_intent(user_question, chat_id=chat_id)
+        if erp_assistant_answer:
+            return {
+                "Question": user_question,
+                "Formatted-Question": user_question,
+                "Bot": erp_assistant_answer,
+            }
+
     if source!="gdoc":
         logs = find_similar_log_question(user_question)
         if logs.get("matched"):

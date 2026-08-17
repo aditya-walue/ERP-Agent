@@ -618,9 +618,9 @@ def non_erp_response(non_erp_q: str) -> Optional[str]:
         score_cutoff=65
     )
     if not result:
-        return {"data":"Hey Iam ChangAI from ERPGulf,iam here to help you with your queries..."}
+        return {"data":"Hey Iam ChangAI from ERPGulf,iam here to help you with your queries...", "matched": False}
     matched_q = result[0]
-    return {"data": response_map.get(matched_q, "Hey Iam ChangAI from ERPGulf,iam here to help you with your queries...")}
+    return {"data": response_map.get(matched_q, "Hey Iam ChangAI from ERPGulf,iam here to help you with your queries..."), "matched": True}
 
 
 def load_non_erp_data():

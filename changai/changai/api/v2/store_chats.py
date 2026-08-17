@@ -35,7 +35,10 @@ def save_logs(
     doc.sql_generated = to_json_if_needed(sql)
     doc.validation = to_json_if_needed(val)
     doc.tries = tries
-    doc.error = to_json_if_needed(err)
+    safe_err = to_json_if_needed(err)
+    if isinstance(safe_err, str) and len(safe_err) > MAX_LOG_LEN:
+        safe_err = safe_err[: MAX_LOG_LEN - 3] + "..."
+    doc.error = safe_err
     doc.result = to_json_if_needed(result)
     doc.formatted_result = to_json_if_needed(formatted_result)
     doc.tables = to_json_if_needed(tables)

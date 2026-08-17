@@ -12,7 +12,7 @@ from changai.changai.api.v2.schema_utils import (ChangAIConfig, CHANGAI_SETTINGS
 _GEMINI_CLIENT = None
 _GEMINI_CONFIG = None
 APPLICATION_JSON = "application/json"
-MODEL_ID = "gemini-2.5-flash-lite"
+MODEL_ID = "gemini-3.5-flash-lite"
 STATUS_200 = 200
 
 

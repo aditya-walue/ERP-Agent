@@ -1028,7 +1028,7 @@ def _generate_batch_gemini(
     total_count,
     wrong_examples,
 ) -> list[dict]:
-    model_id = "gemini-2.5-flash-lite"
+    model_id = "gemini-3.5-flash-lite"
     system_instruction = _build_gemini_system_instruction()
 
     contents = _build_gemini_contents(

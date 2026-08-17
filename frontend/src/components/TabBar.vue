@@ -1,5 +1,5 @@
 <template>
-  <div class="flex gap-1.5 border-b border-slate-200/80 px-2.5 pb-2.5 pt-1">
+  <div v-if="tabs.length > 1" class="flex gap-1.5 border-b border-slate-200/80 px-2.5 pb-2.5 pt-1">
     <button
       v-for="tab in tabs"
       :key="tab.id"
@@ -42,8 +42,7 @@ const tabs = computed(() => {
     { id: 'settings', label: 'Settings' },
   ]
 
-  return props.debugEnabled
-    ? allTabs
-    : allTabs.filter(tab => tab.id !== 'debug')
+  const hidden = props.debugEnabled ? ['support', 'settings'] : ['debug', 'support', 'settings']
+  return allTabs.filter(tab => !hidden.includes(tab.id))
 })
 </script>
