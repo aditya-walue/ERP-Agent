@@ -27,7 +27,9 @@ _ALL_INTENTS = {RECORD_LOOKUP, HOWTO, TROUBLESHOOTING, DEFINITION, WORKFLOW}
 _RULES = [
     (TROUBLESHOOTING, re.compile(
         r"\b(why can'?t|why cant|why is|why does|why won'?t|not working|"
-        r"can'?t submit|cannot submit|won'?t save|not saving|is failing|"
+        r"(?:can'?t|cannot|unable to|not able to|cannot able to) "
+        r"(?:submit|save|create|delete|update|cancel|approve)|"
+        r"won'?t save|not saving|is failing|"
         r"keeps failing|throwing an error|error when)\b", re.I)),
     (WORKFLOW, re.compile(
         r"\b(approval flow|what happens after|next stage|who approves|"
@@ -41,6 +43,15 @@ _RULES = [
     # about a specific field/value in context). This is the one place the
     # spec's own examples disagree only in article, so it's matched first.
     (DEFINITION, re.compile(r"^\s*what\s+(is|are)\s+an?\b", re.I)),
+    # Implementation/configuration meta-questions ("what customizations are in
+    # this system?", "what custom fields/scripts exist", "how is X configured").
+    # These are exactly what erp_assistant's customization provider answers, but
+    # they'd otherwise fall through to record_lookup and never hand off.
+    (DEFINITION, re.compile(
+        r"\b(customi[sz]ations?|custom fields?|custom scripts?|client scripts?|"
+        r"server scripts?|property setters?|customi[sz]ed|automations?)\b|"
+        r"\bwhat.*(implemented|configured|customi[sz]ed|set ?up)\b|"
+        r"\bhow (is|are|was|were) .+(configured|customi[sz]ed|set ?up)\b", re.I)),
 ]
 
 _RECORD_HINTS = re.compile(
