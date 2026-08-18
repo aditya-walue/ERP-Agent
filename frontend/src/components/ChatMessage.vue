@@ -61,40 +61,6 @@
             {{ isExpanded ? 'Collapse' : 'Expand' }}
           </button>
         </div>
-
-        <div
-          v-if="showMuteButton"
-          class="flex flex-wrap items-center"
-        >
-          <button
-            type="button"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-full border transition-colors duration-200"
-            :class="isMuted ? 'border-red-200 bg-red-50 text-red-600 hover:border-red-300 hover:bg-red-100' : 'border-green-200 bg-green-50 text-green-600 hover:border-green-300 hover:bg-green-100'"
-            :title="isMuted ? 'Unmute voice playback' : 'Mute voice playback'"
-            :aria-label="isMuted ? 'Unmute voice playback' : 'Mute voice playback'"
-            @click="toggleMute"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              width="14"
-              height="14"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              aria-hidden="true"
-            >
-              <path d="M11 5L6 9H3v6h3l5 4V5Z" />
-              <template v-if="isMuted">
-                <path d="M15 9l4 6" />
-                <path d="M19 9l-4 6" />
-              </template>
-              <template v-else>
-                <path d="M15 10a3 3 0 0 1 0 4" />
-                <path d="M17.5 7.5a6 6 0 0 1 0 9" />
-              </template>
-            </svg>
-          </button>
-        </div>
       </div>
     </div>
 
@@ -107,9 +73,8 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import BotIcon from './BotIcon.vue'
-import { synthesizeTTS } from '../utils/frappe.js'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 
@@ -118,40 +83,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  autoReadEnabled: {
-    type: Boolean,
-    default: false,
-  },
-  ttsConfig: {
-    type: Object,
-    default: () => ({
-      enableVoiceChat: false,
-      pollyAvailable: false,
-      usePolly: true,
-      voiceId: 'Zayd',
-    }),
-  },
 })
 
-const isSpeaking = ref(false)
-const currentAudio = ref(null)
 const isExpanded = ref(false)
-const isMuted = ref(false)
-let ttsTimer = null
 
-
-const speechSupported = computed(() => (
-  typeof window !== 'undefined' &&
-  'speechSynthesis' in window &&
-  'SpeechSynthesisUtterance' in window
-))
-
-function emitTtsProvider(provider) {
-  if (typeof window === 'undefined') return
-  window.dispatchEvent(new CustomEvent('changai-tts-provider', {
-    detail: { provider },
-  }))
-}
 function getSpeakableText(raw) {
   if (typeof raw !== 'string') return ''
     // Strip markdown before anything else
@@ -170,104 +105,6 @@ function getSpeakableText(raw) {
   const parser = new DOMParser()
   const doc = parser.parseFromString(raw, 'text/html')
   return (doc.body.textContent || '').replace(/\s+/g, ' ').trim()
-}
-
-function stopSpeech() {
-  if (speechSupported.value) {
-    window.speechSynthesis.cancel()
-  }
-  if (currentAudio.value) {
-    currentAudio.value.pause()
-    currentAudio.value.src = ''
-    currentAudio.value = null
-  }
-  isSpeaking.value = false
-}
-
-function toggleMute() {
-  isMuted.value = !isMuted.value
-  if (isMuted.value) {
-    stopSpeech()
-  } else {
-    // Resume TTS with the current message text when unmuting
-    const speakable = normalizedMessageText.value
-    if (!props.autoReadEnabled || !props.ttsConfig?.enableVoiceChat) return
-    if (!speakable || isPlaceholderStatus()) return
-
-    if (props.ttsConfig?.pollyAvailable && props.ttsConfig?.usePolly) {
-      speakTextWithPolly(speakable).catch((err) => {
-        console.warn('Polly TTS failed, falling back to browser speech:', err)
-        speakText(speakable)
-      })
-      return
-    }
-    speakText(speakable)
-  }
-}
-
-function speakText(text) {
-  if (!speechSupported.value || !text) return
-
-  window.dispatchEvent(new CustomEvent('changai-tts-stop'))
-  window.speechSynthesis.cancel()
-
-  const utterance = new SpeechSynthesisUtterance(text)
-  utterance.rate = 1
-  utterance.pitch = 1
-  utterance.onend = () => {
-    isSpeaking.value = false
-  }
-  utterance.onerror = () => {
-    isSpeaking.value = false
-  }
-
-  isSpeaking.value = true
-  emitTtsProvider('browser')
-  window.speechSynthesis.speak(utterance)
-}
-
-async function speakTextWithPolly(text) {
-  const ttsResponse = await synthesizeTTS(text, props.ttsConfig?.voiceId || 'Zayd')
-  if (!ttsResponse?.ok || !ttsResponse?.audio_base64) {
-    throw new Error(ttsResponse?.error || 'Polly synthesis failed')
-  }
-
-  window.dispatchEvent(new CustomEvent('changai-tts-stop'))
-  stopSpeech()
-
-  const mimeType = ttsResponse?.mime_type || 'audio/mpeg'
-  const audio = new Audio(`data:${mimeType};base64,${ttsResponse.audio_base64}`)
-  currentAudio.value = audio
-  isSpeaking.value = true
-
-  let providerEmitted = false
-  audio.onplay = () => {
-    providerEmitted = true
-    emitTtsProvider('polly')
-  }
-
-  audio.onended = () => {
-    if (currentAudio.value === audio) {
-      currentAudio.value = null
-    }
-    isSpeaking.value = false
-  }
-
-  audio.onerror = () => {
-    if (currentAudio.value === audio) {
-      currentAudio.value = null
-    }
-    isSpeaking.value = false
-  }
-
-  await audio.play()
-  if (!providerEmitted) {
-    emitTtsProvider('polly')
-  }
-}
-
-function handleGlobalStop() {
-  stopSpeech()
 }
 
 function isPlaceholderStatus() {
@@ -303,12 +140,6 @@ const shouldCollapse = computed(() => {
   return plainText.length > 520 || lineCount > 8
 })
 
-const showMuteButton = computed(() => (
-  props.message?.role !== 'user' &&
-  !isLoadingStatus.value &&
-  props.ttsConfig?.enableVoiceChat
-))
-
 const renderedMessage = computed(() => {
   const raw = props.message?.text || ''
   return DOMPurify.sanitize(marked.parse(raw))
@@ -316,55 +147,9 @@ const renderedMessage = computed(() => {
 
 watch(
   () => props.message.text,
-  async (newText, oldText) => {
-    if (!props.autoReadEnabled) return
-    if (props.message.role === 'user') return
-    if (isMuted.value) return
-    if (!props.ttsConfig?.enableVoiceChat) {
-      emitTtsProvider('off')
-      return
-    }
-
-    const speakable = getSpeakableText(newText)
-    if (!speakable || isPlaceholderStatus()) return
-
-    const oldSpeakable = getSpeakableText(oldText || '')
-    if (speakable === oldSpeakable) return
-
-    if (props.ttsConfig?.pollyAvailable && props.ttsConfig?.usePolly) {
-      try {
-        await speakTextWithPolly(speakable)
-        return
-      } catch (err) {
-        console.warn('Polly TTS failed, falling back to browser speech:', err)
-      }
-    }
-
-    speakText(speakable)
-  },
-)
-
-watch(
-  () => props.message.text,
   () => {
     isExpanded.value = false
-    isMuted.value = false
   },
 )
-
-onMounted(() => {
-  if (typeof window !== 'undefined') {
-    window.addEventListener('changai-tts-stop', handleGlobalStop)
-  }
-})
-
-onBeforeUnmount(() => {
-  if (typeof window !== 'undefined') {
-    window.removeEventListener('changai-tts-stop', handleGlobalStop)
-  }
-  if (isSpeaking.value) {
-    stopSpeech()
-  }
-})
 
 </script>

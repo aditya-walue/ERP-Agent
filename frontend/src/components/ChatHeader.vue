@@ -16,26 +16,6 @@
 
     <div class="ml-2 flex items-center gap-1.5">
       <button
-        class="h-8 min-w-8 appearance-none items-center justify-center rounded-md border border-white/20 px-2 text-xs font-semibold text-white/90 transition-all duration-200 focus:outline-none sm:flex"
-        style="border-radius: 0.375rem;"
-        :class="autoReadEnabled ? 'bg-white/24 shadow-sm' : 'hover:bg-white/15'"
-        :title="autoReadEnabled ? 'Auto speech on' : 'Auto speech off'"
-        :aria-label="autoReadEnabled ? 'Turn off auto speech' : 'Turn on auto speech'"
-        @click="$emit('toggleAutoRead')"
-      >
-        <svg v-if="autoReadEnabled" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M11 5L6 9H3v6h3l5 4V5z"/>
-          <path d="M15 9a4 4 0 0 1 0 6"/>
-          <path d="M18 7a7 7 0 0 1 0 10"/>
-        </svg>
-        <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M11 5L6 9H3v6h3l5 4V5z"/>
-          <path d="M22 9l-6 6"/>
-          <path d="M16 9l6 6"/>
-        </svg>
-      </button>
-
-      <button
         class="flex h-8 min-w-8 appearance-none items-center justify-center rounded-md border border-white/20 px-2 text-xs font-semibold text-white/90 transition-all duration-200 focus:outline-none"
         style="border-radius: 0.375rem;"
         :class="'bg-white/20 shadow-sm hover:bg-white/25'"
@@ -108,14 +88,6 @@ const props = defineProps({
     type: String,
     required: true,
   },
-  autoReadEnabled: {
-    type: Boolean,
-    required: true,
-  },
-  activeTtsProvider: {
-    type: String,
-    required: true,
-  },
 })
 
 const modeLabels = {
@@ -132,5 +104,5 @@ const nextWindowModeLabel = computed(() => {
   return 'Compact'
 })
 
-defineEmits(['close', 'cycleResize', 'toggleAutoRead'])
+defineEmits(['close', 'cycleResize'])
 </script>

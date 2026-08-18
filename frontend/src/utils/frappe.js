@@ -4,7 +4,6 @@ export const API = {
   PIPELINE: 'changai.changai.api.v2.text2sql_pipeline_v2.run_text2sql_pipeline',
   SUPPORT: 'changai.changai.api.v2.helpdesk_api.support_bot',
   SETTINGS: 'changai.changai.api.v2.schema_utils.get_frontend_settings',
-  TTS: 'changai.changai.api.v2.tts.synthesize_tts',
 }
 
 export function frappeCall(method, args = {}, mode = 'actual') {
@@ -147,11 +146,4 @@ export function callSupportBot(message, mode = 'actual') {
 
 export function getSettingsDetails(mode = 'actual') {
   return frappeCall(API.SETTINGS, {}, mode)
-}
-
-export function synthesizeTTS(text, voiceId = 'Zayd', mode = 'actual') {
-  return frappeCall(API.TTS, {
-    text,
-    voice_id: voiceId,
-  }, mode)
 }

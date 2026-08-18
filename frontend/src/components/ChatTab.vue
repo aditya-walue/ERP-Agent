@@ -10,8 +10,6 @@
       v-for="(msg, i) in messages"
       :key="i"
       :message="msg"
-      :autoReadEnabled="autoReadEnabled"
-      :ttsConfig="ttsConfig"
     />
   </div>
 </template>
@@ -23,14 +21,6 @@ import ChatMessage from './ChatMessage.vue'
 defineProps({
   messages: {
     type: Array,
-    required: true,
-  },
-  autoReadEnabled: {
-    type: Boolean,
-    default: false,
-  },
-  ttsConfig: {
-    type: Object,
     required: true,
   },
 })

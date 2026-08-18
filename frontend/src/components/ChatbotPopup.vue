@@ -12,11 +12,8 @@
       <div class="pointer-events-none absolute inset-0 opacity-45" style="background: linear-gradient(120deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.02) 52%, rgba(255,255,255,0.12) 100%);"></div>
       <ChatHeader
         :windowMode="windowMode"
-        :autoReadEnabled="autoReadEnabled"
-        :activeTtsProvider="activeTtsProvider"
         @close="$emit('close')"
         @cycleResize="cycleWindowMode"
-        @toggleAutoRead="$emit('toggleAutoRead')"
       />
       <TabBar v-model="localTab" :debugEnabled="debugEnabled" />
     </div>
@@ -26,20 +23,13 @@
         <ChatTab
           v-if="localTab === 'chat'"
           :messages="chatHistory"
-          :autoReadEnabled="autoReadEnabled"
-          :ttsConfig="ttsConfig"
         />
         <DebugTab v-else-if="localTab === 'debug' && debugEnabled" :logs="debugLogs" :currentDebug="currentDebug" />
-        <SupportTab v-else-if="localTab === 'support'" :messages="supportHistory" :autoReadEnabled="autoReadEnabled" :ttsConfig="ttsConfig" />
+        <SupportTab v-else-if="localTab === 'support'" :messages="supportHistory" />
         <SettingsTab
           v-else-if="localTab === 'settings'"
-          :autoReadEnabled="autoReadEnabled"
-          :ttsConfig="ttsConfig"
-          :settings="settings"
           :debugEnabled="debugEnabled"
           :sendNonERPtoaiEnabled="sendNonERPtoaiEnabled"
-          @toggleAutoRead="$emit('toggleAutoRead')"
-          @togglePollyPreference="$emit('togglePollyPreference')"
           @toggleDebug="$emit('toggleDebug')"
           @toggleSendNonERP="$emit('toggleSendNonERP')"
         />
@@ -95,15 +85,12 @@ const props = defineProps({
   debugLogs: { type: Array, required: true },
   currentDebug: { type: Object, default: null },
   supportHistory: { type: Array, required: true },
-  autoReadEnabled: { type: Boolean, required: true },
-  ttsConfig: { type: Object, required: true },
-  activeTtsProvider: { type: String, required: true },
   settings: { type: Object, default: null },
   isAwaitingChatResponse: { type: Boolean, default: false },
   isAwaitingSupportResponse: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['close', 'submit', 'cancelResponse', 'update:activeTab', 'toggleAutoRead', 'togglePollyPreference', 'toggleDebug','toggleSendNonERP'])
+const emit = defineEmits(['close', 'submit', 'cancelResponse', 'update:activeTab', 'toggleDebug','toggleSendNonERP'])
 
 const chatBodyRef = ref(null)
 const chatFormRef = ref(null)
