@@ -8,7 +8,7 @@
     <div class="pointer-events-none absolute -right-14 -top-14 h-36 w-36 rounded-full bg-brand-500/15 blur-2xl"></div>
     <div class="pointer-events-none absolute -bottom-14 -left-12 h-32 w-32 rounded-full bg-violet-400/15 blur-2xl"></div>
 
-    <div class="relative overflow-hidden bg-linear-to-br from-brand-600 via-brand-500 to-violet-400">
+    <div class="chat-header-surface relative overflow-hidden bg-linear-to-br from-brand-600 via-brand-500 to-violet-400">
       <div class="pointer-events-none absolute inset-0 opacity-45" style="background: linear-gradient(120deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.02) 52%, rgba(255,255,255,0.12) 100%);"></div>
       <ChatHeader
         :windowMode="windowMode"
