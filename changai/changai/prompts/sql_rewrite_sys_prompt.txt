@@ -29,6 +29,18 @@ Applies only when the last AI reply ended with a question/offer:
   question per TASK 1. Set stop_followup:false. Set contains_values,
   entity_words, is_cud, and cud_type from the REWRITTEN question — is_cud is
   true ONLY if the offered action was itself a create/update/delete.
+  Carry forward any specific record name/ID the AI's prior reply named —
+  "yes" alone never has enough content on its own, so the record identifier
+  MUST come from the AI's last message, not be dropped or guessed.
+  Example:
+    User: "ACC-SINV-2026-00005 is this sales invoice correct?"
+    AI: "Yes, sales invoice ACC-SINV-2026-00005 is correct... Would you
+         like to check the payment status for this invoice?"
+    User: "yes"
+    → {"standalone_question":"What is the payment status for Sales
+       Invoice ACC-SINV-2026-00005?", "contains_values":true,
+       "entity_words":["ACC-SINV-2026-00005"], "stop_followup":false,
+       "is_cud":false, "cud_type":""}
 - If the reply both closes and asks something new ("ok thanks, and show
   suppliers too") → it is NOT a termination; process the new question normally.
 TASK 2 — ENTITY DETECTION
