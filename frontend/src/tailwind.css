@@ -230,6 +230,26 @@
     margin-bottom: 0.15rem;
   }
 
+  #changai-chatbot-root .chat-card a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    color: #5f44ad;
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-color: rgba(109, 79, 194, 0.35);
+    text-underline-offset: 2px;
+    background: rgba(109, 79, 194, 0.08);
+    padding: 0.05em 0.4em;
+    border-radius: 6px;
+    transition: background-color 150ms ease, text-decoration-color 150ms ease;
+  }
+
+  #changai-chatbot-root .chat-card a:hover {
+    background: rgba(109, 79, 194, 0.16);
+    text-decoration-color: rgba(109, 79, 194, 0.7);
+  }
+
   #changai-chatbot-root .chat-card code {
     font-family: monospace;
     font-size: 0.8em;
