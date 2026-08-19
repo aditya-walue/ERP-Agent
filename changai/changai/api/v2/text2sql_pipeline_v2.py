@@ -49,7 +49,8 @@ from changai.changai.api.v2.store_chats import (
     save_logs,
     find_similar_log_question,
     _get_sql_error_message,
-   _error_response 
+   _error_response,
+    get_chat_history,
 )
 from changai.changai.api.v2.format_output import (
     format_data
@@ -434,6 +435,42 @@ def _parse_rewrite_response(raw: Any, user_qstn: str) -> Tuple[str, bool]:
         standalone = json.dumps(obj)
     return standalone or user_qstn.strip(), contains_values, entity_words,create_entity, doc,entity_name,report_name,open_report,report_intent,stop_followup,message,is_cud,cud_type
 
+_BARE_AFFIRMATIVE_RE = re.compile(
+    r"^\s*(yes|yeah|yep|yup|sure|ok|okay|go ahead|please do|do it|"
+    r"please|correct|right|confirmed)[\s.!]*$", re.I
+)
+
+
+def _expand_bare_affirmative(user_qstn: str, session_id: str) -> str:
+    """
+    A bare "yes" carries zero content of its own — asking the rewrite LLM to
+    dig the referenced record out of a python-repr'd history blob is
+    unreliable (observed failing in practice even with worked examples in
+    the system prompt). Deterministically splice in the AI's last message
+    instead, so the rewrite step has the actual offer/record right in the
+    question text rather than having to infer it from history formatting.
+    """
+    if not user_qstn or not _BARE_AFFIRMATIVE_RE.match(user_qstn):
+        return user_qstn
+    try:
+        history = get_chat_history(session_id) or []
+    except Exception:
+        return user_qstn
+    last_ai = next(
+        (turn.get("ai") for turn in reversed(history) if isinstance(turn, dict) and turn.get("ai")),
+        None
+    )
+    if not last_ai or not isinstance(last_ai, str) or "?" not in last_ai:
+        return user_qstn
+    return (
+        f'The assistant previously said: "{last_ai.strip()}"\n'
+        f'The user just replied "{user_qstn.strip()}", agreeing to whatever '
+        f"the assistant offered above. Rewrite THAT offered action as the "
+        f"standalone question, carrying forward any record name/ID the "
+        f"assistant's message named."
+    )
+
+
 def rewrite_question(state: SQLState) -> SQLState:
     report_intent = None
     request_id = state.get("request_id")
@@ -441,7 +478,8 @@ def rewrite_question(state: SQLState) -> SQLState:
     session_id = state.get("session_id")
     entity_words = []
     sys_prompt = SQL_REWRITE_SYS_PROMPT
-    prompt = inject_prompt(user_qstn, session_id)
+    effective_qstn = _expand_bare_affirmative(user_qstn, session_id)
+    prompt = inject_prompt(effective_qstn, session_id)
     report_name_new=None
     try:
         raw = call_model(prompt, "llm",sys_prompt)
