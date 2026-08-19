@@ -1,16 +1,25 @@
 <script setup>
-import { ref, reactive, computed, nextTick, onMounted } from 'vue'
+import { ref, reactive, computed, nextTick, onMounted, watch } from 'vue'
 import ChatbotToggler from './components/ChatbotToggler.vue'
 import ChatbotPopup from './components/ChatbotPopup.vue'
 import { runPipelineCancelable, callSupportBotCancelable, getSettingsDetails } from './utils/frappe.js'
-import { getOrCreateChatId } from './utils/session.js'
+import {
+  getOrCreateChatId,
+  loadChatHistory,
+  saveChatHistory,
+  loadSupportHistory,
+  saveSupportHistory,
+} from './utils/session.js'
 import { normalizeBotText, getErrorText, safeStringify } from './utils/helpers.js'
 const showChatbot = ref(false)
 const activeTab = ref('chat')
-const chatHistory = ref([])
+const chatHistory = ref(loadChatHistory())
 const debugLogs = ref([])
 const debugEnabled = ref(false)
-const supportHistory = ref([])
+const supportHistory = ref(loadSupportHistory())
+
+watch(chatHistory, (history) => saveChatHistory(history), { deep: true })
+watch(supportHistory, (history) => saveSupportHistory(history), { deep: true })
 const popupRef = ref(null)
 const responseMode = ref('actual')
 const settings = ref(null)
