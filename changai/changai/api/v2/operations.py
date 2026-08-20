@@ -3,6 +3,10 @@ import json
 import re
 from typing import Any, Dict, List, Tuple, Optional
 
+from changai.changai.erp_assistant.agent.doctype_meta import (
+    missing_mandatory_fields as _missing_mandatory_fields,
+)
+
 CHANGAI_GUIDE_LINK="https://app.erpgulf.com/en/articles/chang-ai-quick-start-guide"
 
 @frappe.whitelist(allow_guest=False)
@@ -18,6 +22,15 @@ def execute_insert(payload: dict) -> Any:
         if operation == "insert_main":
             frappe.has_permission(payload["doctype"], "create", throw=True)
             _validate_linked_fields(payload["doctype"], payload["data"])
+            missing = _missing_mandatory_fields(payload["doctype"], payload["data"])
+            if missing:
+                return {
+                    "error": _generic_create_howto(payload["doctype"], missing),
+                    "missing_fields": missing,
+                    # Not a failure to apologize for — a real how-to answer.
+                    # Tells the caller not to prefix it as an error.
+                    "howto": True,
+                }
 
             doc = frappe.get_doc({
                 "doctype": payload["doctype"],
@@ -181,6 +194,13 @@ def execute_insert(payload: dict) -> Any:
             for record in payload["records"]:
                 try:
                     _validate_linked_fields(payload["doctype"], record)
+                    missing = _missing_mandatory_fields(payload["doctype"], record)
+                    if missing:
+                        failed.append({
+                            "record": record,
+                            "error": f"Missing required field(s): {', '.join(missing)}",
+                        })
+                        continue
                     doc = frappe.get_doc({
                         "doctype": payload["doctype"],
                         **record
@@ -269,6 +289,48 @@ def _validate_linked_fields(doctype: str, data: dict):
                 frappe.throw(
                     f"'{value}' does not exist in {field.options}. Please create it first."
                 )
+
+
+def _generic_create_howto(doctype: str, missing_fields: List[str]) -> str:
+    """
+    Deterministic, LLM-free how-to for creating a doctype record, built
+    straight from its meta. Used whenever a create attempt is rejected for
+    missing data — most often a "how to create a new X" question that the
+    CUD path misread as a create command and extracted no field values from.
+    That person still asked a how-to question and deserves real steps, not
+    just a bare list of field names — and this has to work even when
+    erp_assistant/Gemini can't answer (rate-limited, no key, etc.), since
+    that's exactly the situation this path exists for.
+    """
+    meta = frappe.get_meta(doctype)
+    field_by_name = {f.fieldname: f for f in meta.fields}
+    labels = []
+    for fieldname in missing_fields:
+        field = field_by_name.get(fieldname)
+        # A fixed single-option naming series is auto-assigned, not
+        # something the user picks — don't list it as "required info".
+        if (
+            field
+            and field.fieldname == "naming_series"
+            and field.options
+            and "\n" not in field.options
+        ):
+            continue
+        label = field.label if field and field.label else fieldname.replace("_", " ").title()
+        labels.append(label)
+
+    route = doctype.lower().replace(" ", "-")
+    steps = [f"Go to **{doctype}** list and click **New**."]
+    if labels:
+        steps.append(f"Fill in the required fields: {', '.join(labels)}.")
+    steps.append("Click **Save** to create the record.")
+    step_lines = "\n".join(f"{i + 1}. {s}" for i, s in enumerate(steps))
+
+    return (
+        f"### Step-by-step Instructions\n{step_lines}\n\n"
+        f"### Navigation\n[{doctype} > New](/app/{route}/new)"
+    )
+
 
 def _auto_create_linked(payload: dict, parent_name: str, parent_doc) -> dict:
     try:

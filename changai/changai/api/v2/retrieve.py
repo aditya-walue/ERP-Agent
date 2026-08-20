@@ -7,7 +7,6 @@ from pathlib import Path
 from functools import lru_cache
 from typing import Any, Dict, List, Optional, Union
 from rapidfuzz import fuzz, process
-from changai.changai.api.v2.non_erp_handler import load_non_erp_data
 from changai.changai.api.v2.clients import gemini_client
 from changai.changai.api.v2.tts import get_polly_client
 from changai.changai.api.v2.schema_utils import (
@@ -281,7 +280,6 @@ def load_on_startup():
         return 
     message=f"PID={os.getpid()} | module={__name__} | file={__file__} | loaded={_EMBEDDER_INSTANCE is not None} | id={id(_EMBEDDER_INSTANCE)}"
     try:
-        load_non_erp_data()
         get_embedding_engine()
         get_vs(True)
         load_field_matrix()

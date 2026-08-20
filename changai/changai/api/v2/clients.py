@@ -300,6 +300,13 @@ def call_gemini(prompt: str,sys_prompt: str) -> Union[str, Dict[str, Any]]:
 
         gemini_config = types.GenerateContentConfig(
             system_instruction=sys_prompt,
+            # Same instructions were producing wildly different answers call
+            # to call (sometimes real steps, sometimes "I don't know") —
+            # this was running at the SDK's default temperature (~1.0,
+            # high-variance sampling) with nothing pinning it down. erp_
+            # assistant's own Gemini calls already use 0.1 for exactly this
+            # reason (consistent, non-creative answers); match that here.
+            temperature=0.1,
         )
         response = client.models.generate_content(
             model=MODEL_ID,

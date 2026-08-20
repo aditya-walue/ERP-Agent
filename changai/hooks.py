@@ -199,23 +199,14 @@ on_session_creation = [
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"changai.tasks.all"
-# 	],
-# 	"daily": [
-# 		"changai.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"changai.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"changai.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"changai.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	# Rebuild the erp_assistant implementation index nightly so answers
+	# track customizations (moved here when erp_assistant was merged in
+	# as a subpackage instead of a separate installed app).
+	"daily": [
+		"changai.changai.erp_assistant.extractor.build_index",
+	],
+}
 
 # Testing
 # -------

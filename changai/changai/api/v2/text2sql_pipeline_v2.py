@@ -56,7 +56,6 @@ from changai.changai.api.v2.format_output import (
     format_data
 )
 from changai.changai.api.v2.clients import call_model,gemini_client
-from changai.changai.api.v2.non_erp_handler import non_erp_response
 from frappe.desk.reportview import build_match_conditions
 from frappe import _
 from frappe.desk.query_report import get_script
@@ -860,20 +859,16 @@ def _try_erp_assistant_for_intent(question: str, chat_id: str = None):
     empty query, and the result-formatter then improvises a generic
     "couldn't find instructions" message with no ERP grounding — a dead end
     that never reaches the NON_ERP branch this file already hands off to
-    erp_assistant. Only intercepts the implementation-assistant intents;
-    record lookups still go through changai's own (already-working) SQL
-    pipeline untouched.
+    the erp_assistant subpackage. Only intercepts the implementation-assistant
+    intents; record lookups still go through changai's own (already-working)
+    SQL pipeline untouched.
     """
     try:
-        if "erp_assistant" not in frappe.get_installed_apps():
-            return None
-        from erp_assistant.agent import intent as intent_mod
-        classified = intent_mod.classify(question)
-        if classified == intent_mod.RECORD_LOOKUP:
-            return None
-        return _try_erp_assistant(question, chat_id=chat_id)
+        from changai.changai.erp_assistant.agent.orchestrator import try_answer_if_relevant
+        conversation_context = _recent_conversation_text(chat_id)
+        return try_answer_if_relevant(question, conversation_context=conversation_context or None)
     except Exception:
-        frappe.log_error(frappe.get_traceback(), "ChangAI -> erp_assistant intent gate failed")
+        frappe.log_error(frappe.get_traceback(), "ChangAI erp_assistant intent gate failed")
         return None
 
 
@@ -907,54 +902,56 @@ def _recent_conversation_text(chat_id: str, max_turns: int = 6) -> str:
 
 def _try_erp_assistant(question: str, chat_id: str = None):
     """
-    Best-effort hand-off to the erp_assistant app's implementation-assistant
-    pipeline (intent classification + How-To/Troubleshooting/Definition/
-    Workflow providers) for questions ChangAI's own ERP-data pipeline routed
-    to NON_ERP — e.g. "how do I create a Project?" isn't a data query, but
-    it also isn't a generic non-ERP chit-chat question, and answering it
-    with an ungrounded generic-Gemini call produces plausible-sounding but
-    wrong "check with another department" style non-answers.
-
-    In-process import. (An earlier version of this ran erp_assistant in a
-    subprocess because its Gemini client used the google-genai SDK's async
-    transport, which stalled for minutes when co-imported with changai's
-    torch/langgraph stack. erp_assistant.llm now talks to Gemini via plain
-    synchronous `requests` instead, which doesn't have that problem — an
-    in-process call completes in ~4s, so the subprocess indirection is gone.)
+    Best-effort hand-off to the erp_assistant subpackage's implementation-
+    assistant pipeline (intent classification + How-To/Troubleshooting/
+    Definition/Workflow providers) for questions ChangAI's own ERP-data
+    pipeline routed to NON_ERP — e.g. "how do I create a Project?" isn't a
+    data query, but it also isn't a generic non-ERP chit-chat question, and
+    answering it with an ungrounded generic-Gemini call produces
+    plausible-sounding but wrong "check with another department" style
+    non-answers.
 
     chat_id, when given, lets erp_assistant see the last few turns of this
     conversation — critical for Troubleshooting ("why can't I create this?"
     right after a failed insert), where the actual error the user just saw
     is worth far more than any retrieved documentation.
 
-    Returns the answer string, or None if erp_assistant isn't installed or
-    couldn't answer (caller falls back to its existing behavior either way).
+    Returns the answer string, or None if erp_assistant couldn't answer
+    (caller falls back to its existing behavior either way).
     """
     try:
-        if "erp_assistant" not in frappe.get_installed_apps():
-            return None
-        from erp_assistant.agent import orchestrator
+        from changai.changai.erp_assistant.agent.orchestrator import try_answer
         conversation_context = _recent_conversation_text(chat_id)
-        result = orchestrator.ask_agent(question, conversation_context=conversation_context or None)
-        answer = (result or {}).get("answer")
-        return answer or None
+        return try_answer(question, conversation_context=conversation_context or None)
     except Exception:
-        frappe.log_error(frappe.get_traceback(), "ChangAI -> erp_assistant handoff failed")
+        frappe.log_error(frappe.get_traceback(), "ChangAI erp_assistant handoff failed")
         return None
+
+
+_NON_ERP_SYS_PROMPT = """You are ChangAI, an intelligent assistant powered by ERPGulf, embedded inside this ERPNext instance.
+
+This question reached you because it wasn't a data-lookup query and the ERP implementation-assistant couldn't answer it (it may be temporarily unavailable) — it can still be a genuine ERP question (e.g. "how do I create a Sales Invoice?"), not necessarily off-topic chit-chat, so don't assume it's unrelated to ERP.
+
+Two different kinds of "making things up" — treat them differently:
+- Standard ERPNext procedure (the general steps to create/use a doctype: which list, which fields, click New/Save) is NOT something you need real data access for. You already know this from training — state it confidently, every time, for any standard ERPNext how-to question. This is never optional and never something to decline.
+- Specific instance DATA (an actual record's name, ID, customer, amount, or anything that would need a live database lookup) is the only thing you must never invent. If asked for a specific record, say you can't look that up directly — but that has no bearing on whether you can explain the general procedure.
+
+Rules:
+- If the question is "how do I create/use/do X" in standard ERPNext: always answer with real numbered steps (list -> New -> which fields to fill -> Save/Submit), and end with a markdown link line: "Navigation: [<doctype name> > New](/app/<doctype-name-lowercased-with-spaces-replaced-by-hyphens>/new)" — it must be a markdown link (square brackets + parentheses), not the bare URL as plain text, or it won't render as clickable. Do not say you don't have instructions — you do. Only skip the Navigation line if you're genuinely unsure of the exact doctype name.
+- Never invent specific record names, IDs, or reference numbers for this instance.
+- If the question is genuinely unrelated to this ERP system, just answer it plainly and helpfully.
+- Answer directly. Do not open with a greeting or self-introduction ("Hello, I am ChangAI...") — go straight to the answer.
+"""
 
 
 def routeNonErpToAI(state: SQLState):
     question= state["question"]
-    sys_prompt = """You are ChangAI, an intelligent assistant powered by ERPGulf. 
-The user has asked a general question that is not related to ERP. 
-Answer the question clearly and helpfully.
-Always mention that you are ChangAI by ERPGulf when introducing yourself."""
     if frappe.utils.cint(state.get("sendNonErptoAI", 0)) == 1 or state.get("sendNonErptoAI") == "true":
         erp_answer = _try_erp_assistant(question, chat_id=state.get("session_id"))
         if erp_answer:
             return {**state, "non_erp_res": erp_answer}
         try:
-            res = call_gemini(question,sys_prompt)
+            res = call_gemini(question, _NON_ERP_SYS_PROMPT)
             return {**state, "non_erp_res": res}
         # except ValidationError as ve:
         #     return {**state,"error":str(ve)}
@@ -968,27 +965,26 @@ Always mention that you are ChangAI by ERPGulf when introducing yourself."""
 
 
 def send_non_erp_request(state: SQLState) -> SQLState:
-    qstn =state.get("question")
+    qstn = state.get("question")
     if not qstn:
         return {**state, "non_erp_res": "", "error": "No question provided"}
     try:
-        # response = handle_non_erp_query(qstn)
-        response = non_erp_response(qstn)
-        # response = call_model(prompt, "llm")
-        if not response or not response.get("data"):
-            return {**state,"non_erp_res": "", "error": str(response)}
-        if not response.get("matched"):
-            # No static FAQ entry — before giving the generic filler, see if
-            # this is actually an implementation question erp_assistant can
-            # answer (how-to / troubleshooting / definition / workflow).
-            erp_answer = _try_erp_assistant(qstn, chat_id=state.get("session_id"))
-            if erp_answer:
-                return {**state, "non_erp_res": erp_answer, "error": None}
-        return {**state,"non_erp_res": response["data"], "error": None}
+        # Fuzzy/keyword matching against a static FAQ table used to run here
+        # first (non_erp_response()) — at a score_cutoff as loose as 65 on
+        # WRatio, ordinary questions ("can you list them?", "what are you
+        # capable of?") kept matching unrelated canned "who are you"/greeting
+        # entries instead of getting a real answer. Always try the real
+        # implementation-assistant / general-purpose LLM path instead.
+        erp_answer = _try_erp_assistant(qstn, chat_id=state.get("session_id"))
+        if erp_answer:
+            return {**state, "non_erp_res": erp_answer, "error": None}
+
+        res = call_gemini(qstn, _NON_ERP_SYS_PROMPT)
+        return {**state, "non_erp_res": res, "error": None}
     except frappe.exceptions.ValidationError:
         raise
     except Exception as e:
-        return {**state, "non_erp_res": "", "error": f"NON-ERP call failed: {e}"}
+        return {**state, "non_erp_res": "Model Calling Failed. Please try again.", "error": f"NON-ERP call failed: {e}"}
  
 def route_after_entities(state: SQLState) -> str:
     config = ChangAIConfig.get()
@@ -1278,6 +1274,10 @@ def _handle_sql_result(
             error_msg = payload_res.get("error", "Unknown error occurred")
             # Clean HTML tags if any
             clean_msg = re.sub(r'<[^>]+>', '', error_msg)
+            # A howto response (e.g. execute_insert declining to create a
+            # record because required fields were never supplied) is a real
+            # answer, not a failure — don't apologize for it with "❌".
+            bot_text = clean_msg if payload_res.get("howto") else f"❌ {clean_msg}"
             publish_pipeline_update(
                 request_id,
                 "format_data_completed",
@@ -1287,7 +1287,7 @@ def _handle_sql_result(
             save_turn_2(
                 session_id=chat_id,
                 user_text=formatted_q,
-                bot_text=f"❌ {clean_msg}",
+                bot_text=bot_text,
                 type_="erp"
             )
             save_logs(
@@ -1299,7 +1299,7 @@ def _handle_sql_result(
                 val=val,
                 err=clean_msg,
                 result=[],
-                formatted_result=f"❌ {clean_msg}",
+                formatted_result=bot_text,
                 tables=selected_tables,
                 fields=fields,
                 entity_debug=entity_debug,
@@ -1322,16 +1322,22 @@ def _handle_sql_result(
                 "result": [],
                 "EntityDebug": entity_debug,
                 "Bot": {
-                    "answer": f"❌ {clean_msg}"
+                    "answer": bot_text
                 }
             }
 
         # ✅ Normal success case
-        formatted_result = format_data(user_question, payload_res)
-    elif sql:            
+        formatted_result = format_data(user_question, payload_res, doctype_hint=payload.get("doctype"))
+    elif sql:
+        # extracted_tables holds the real "tabXxx" table(s) this query
+        # actually ran against — stripping the "tab" prefix gives the exact
+        # DocType name, so the formatter can build a correct Navigation
+        # link instead of guessing one from its own generated prose.
+        sql_doctype_hint = extracted_tables[0][3:] if extracted_tables else None
         formatted_result = format_data(
             user_question,
-            sql_result
+            sql_result,
+            doctype_hint=sql_doctype_hint,
         )
     publish_pipeline_update(
         request_id,

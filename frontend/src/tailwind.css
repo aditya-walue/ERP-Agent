@@ -1,12 +1,27 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Manrope:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
 @theme {
+  /* Full violet ramp anchored on the existing 500/600 brand identity — many
+     components already reference brand-100/200/300/700 (hover borders,
+     focus rings, gradient stops) but only 50/500/600 were ever defined, so
+     those states silently no-op. Filling in the ramp fixes them everywhere
+     at once. */
+  --color-brand-50: #f6f2ff;
+  --color-brand-100: #ece3fb;
+  --color-brand-200: #d9cbf6;
+  --color-brand-300: #bda3ef;
+  --color-brand-400: #9a76e0;
   --color-brand-500: #6d4fc2;
   --color-brand-600: #5f44ad;
-  --color-brand-50: #f6f2ff;
+  --color-brand-700: #4a3689;
+  --color-brand-800: #362867;
+  --color-brand-900: #241a45;
   --color-accent-500: #12b981;
   --color-ink-900: #0f172a;
   --color-surface-50: #f8fafc;
+  --font-sans: "Manrope", "Plus Jakarta Sans", "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-display: "Fraunces", "Manrope", "Segoe UI", serif;
   --animate-dot-wave: dot-wave 1.4s ease-in-out infinite;
   --animate-gemini-arc: gemini-arc 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   --animate-gemini-spark: gemini-spark 1.45s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
@@ -180,8 +195,14 @@
   }
 
   #changai-chatbot-root {
-    font-family: "Plus Jakarta Sans", "Segoe UI", "Helvetica Neue", sans-serif;
+    font-family: var(--font-sans);
     color: #0f172a;
+  }
+
+  #changai-chatbot-root .chat-wordmark {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.005em;
   }
 
   #changai-chatbot-root button,
@@ -300,8 +321,8 @@
     background:
       radial-gradient(120% 120% at 100% 0%, rgba(109, 79, 194, 0.1) 0%, rgba(109, 79, 194, 0) 58%),
       radial-gradient(120% 120% at 0% 100%, rgba(109, 79, 194, 0.06) 0%, rgba(109, 79, 194, 0) 55%),
-      #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.6);
+      #fdfcff;
+    border: 1px solid rgba(109, 79, 194, 0.14);
   }
 
   #changai-chatbot-root .chat-header-surface {
@@ -309,9 +330,9 @@
   }
 
   #changai-chatbot-root .chat-card {
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.92));
-    box-shadow: 0 12px 35px -28px rgba(15, 23, 42, 0.45);
+    border: 1px solid rgba(109, 79, 194, 0.13);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(250, 248, 253, 0.94));
+    box-shadow: 0 14px 34px -26px rgba(74, 54, 137, 0.4);
   }
 
   @media (prefers-reduced-motion: reduce) {

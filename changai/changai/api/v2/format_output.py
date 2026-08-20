@@ -591,20 +591,50 @@ def local_format(sql: str, sample_rows: List[Dict[str, Any]]):
     result = format_sql_response(sql, row_count, sample_rows)
     return result
 
-def format_data(qstn: str, sql_data: Any) -> Dict[str, str]:
+def format_data(qstn: str, sql_data: Any, doctype_hint: Optional[str] = None) -> Dict[str, str]:
     if isinstance(sql_data, (dict, list)):
         db_result_json = json.dumps(sql_data, ensure_ascii=False, default=str)
     else:
         db_result_json = str(sql_data) if sql_data is not None else "{}"
 
-    sys_prompt = """
+    # doctype_hint is the real DocType this query actually targeted (from
+    # the executed SQL/insert, not a guess) — passing it lets the model
+    # build an accurate Navigation slug instead of inferring one from
+    # whatever name it used in its own prose, which is wrong for doctypes
+    # whose real name doesn't match their common English name (e.g. "BOM",
+    # not "Bill of Material").
+    doctype_note = (
+        f'\nThe DocType this question is actually about is exactly "{doctype_hint}" '
+        f"— if you include a Navigation line, build the slug from this exact "
+        f"name, not from any other name you use in the answer text.\n"
+        if doctype_hint else ""
+    )
+
+    sys_prompt = f"""
 You are ChangAI, a warm and intelligent business assistant.
 Your job is to turn raw database results into clear, friendly, human-readable answers.
 CONTENT RULES:
 - Use BOTH the user question and the DB result JSON to form the answer.
 - Use ONLY values present in the JSON. NEVER invent numbers or fields.
-- If result is empty, respond warmly and suggest refining the search.
+- First check what the QUESTION actually wants. If it's asking HOW TO
+  perform an action on a record (create/add/set up/submit/etc.), it was
+  never a data lookup in the first place, no matter what the DB result JSON
+  contains or how empty it is. Answer with the real standard steps for that
+  action instead (which list to open, which fields to fill, Save/Submit) —
+  never say "no results" or suggest "refining the search" for this kind of
+  question; that framing is only for questions that were genuinely asking
+  to find/look up existing records.
+  End a how-to answer for creating a record with a markdown link line:
+  "Navigation: [<doctype name> > New](/app/<doctype-name-lowercased-with-
+  spaces-replaced-by-hyphens>/new)" — it must be a markdown link (square
+  brackets + parentheses), not the bare URL as plain text, or it won't
+  render as clickable. Skip this line only if you're genuinely unsure of
+  the exact doctype name.
+{doctype_note}- If the question WAS a genuine lookup/search and result is empty, respond
+  warmly and suggest refining the search.
 - Do NOT mention SQL, tables, fields, JSON, reasoning, or steps.
+- Answer directly. Do not open with a greeting or self-introduction
+  ("Hello, I am ChangAI...") — go straight to the answer.
 
 TONE & STYLE:
 - Warm, conversational, and helpful — like a knowledgeable friend, not a report.
