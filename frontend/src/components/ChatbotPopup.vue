@@ -23,6 +23,7 @@
         <ChatTab
           v-if="localTab === 'chat'"
           :messages="chatHistory"
+          @ask="(text) => $emit('submit', text)"
         />
         <DebugTab v-else-if="localTab === 'debug' && debugEnabled" :logs="debugLogs" :currentDebug="currentDebug" />
         <SupportTab v-else-if="localTab === 'support'" :messages="supportHistory" />

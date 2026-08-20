@@ -37,7 +37,6 @@ _NO_MATCH_FALLBACK = (
     "I couldn't find an answer to that. Try rephrasing your question, or "
     "contact support for help."
 )
-_STANDARD_FALLBACK_NOTE = "\n\n_This is based on standard ERPNext guidance._"
 
 # Which intents get the agentic plan/run-tools/validate loop (agent/planner.py)
 # instead of the static per-intent provider table in router.py. Deliberately
@@ -189,9 +188,6 @@ def ask_agent(question: str, conversation_context: str = None) -> Dict:
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "erp_assistant.ask_agent")
         frappe.throw(f"Assistant model call failed: {e}")
-
-    if used_fallback:
-        answer = answer.rstrip() + _STANDARD_FALLBACK_NOTE
 
     citations = [
         {"provider": c.provider, "title": c.title, "score": round(c.score, 3), **c.citation}
