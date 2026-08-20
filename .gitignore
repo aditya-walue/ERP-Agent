@@ -9,3 +9,6 @@ node_modules
 __pycache__
 .env
 changai/changai/api/v2/data
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+graft/

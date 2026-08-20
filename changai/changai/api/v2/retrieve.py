@@ -140,13 +140,27 @@ def load_field_matrix():
     return docs, embs, table_to_idx
 
 
+def _embedding_provider() -> str:
+    # Default to Gemini — hosted, needs no local model download, works on a
+    # free-tier/low-compute site. Set changai.embedding_provider = "local"
+    # in site_config.json to use the downloaded HuggingFace model instead
+    # (same switch shape erp_assistant/llm.py already uses for its own
+    # provider selection).
+    return (frappe.conf.get("changai") or {}).get("embedding_provider", "gemini")
+
+
 def get_embedding_engine():
     global _EMBEDDER_INSTANCE
     if _EMBEDDER_INSTANCE is not None:
         return _EMBEDDER_INSTANCE
-    
+
+    if _embedding_provider() != "local":
+        from changai.changai.api.v2.embedding_client import GeminiEmbeddingService
+        _EMBEDDER_INSTANCE = GeminiEmbeddingService()
+        return _EMBEDDER_INSTANCE
+
     model_path = _get_model_path()  # check path first, always
-    
+
     if not os.path.exists(model_path):
         _EMBEDDER_INSTANCE = None  # reset if model missing
         frappe.throw(
@@ -160,7 +174,7 @@ def get_embedding_engine():
             ).format(CHANGAI_GUIDE_LINK,get_settings_url(),ERPGULF_LINK),
             title=_("Embedding Model Required")
         )
-    
+
     if _EMBEDDER_INSTANCE is None:
         _EMBEDDER_INSTANCE = HuggingFaceEmbeddings(
             model_name=model_path,
@@ -169,7 +183,7 @@ def get_embedding_engine():
         "normalize_embeddings": True,
     },
         )
-    
+
     return _EMBEDDER_INSTANCE
 
 

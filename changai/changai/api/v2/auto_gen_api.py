@@ -447,17 +447,12 @@ def _update_or_create_table_block(
     table: str,
     fields: List[Dict[str, Any]],
 ) -> None:
-    if table in by_table:
-        by_table[table]["fields"] = fields
-        by_table[table]["desc_done"] = not _has_pending_descriptions(fields)
-        return
-    by_table[table] = {
-        "table": table,
-        "description": "",
-        "fields": fields,
-        "grain":"",
-        "desc_done": False,
-    }
+    block = by_table.setdefault(table, {})
+    block["table"] = table
+    block["fields"] = fields
+    block["desc_done"] = not _has_pending_descriptions(fields)
+    if "description" not in block:
+        block["description"] = ""
 def _build_field_entry(
     field_meta: Any,
     existing_fields: Dict[str, Dict[str, Any]],
@@ -671,10 +666,9 @@ def sync_tables_and_schema_smart() -> Dict[str, Any]:
 )
     current_tables = sorted(_tab(dt) for dt in current_doctypes)
 
-    changed_tables = {_tab(dt) for dt in changed_doctypes}
-    missing_from_schema = {t for t in current_tables if t not in by_table}
-
-    tables_to_process = current_tables
+    changed_tables, missing_from_schema, _new_from_changed, tables_to_process, _merged = (
+        _get_tables_to_process(by_table, current_tables, changed_doctypes)
+    )
 
     for table in tables_to_process:
         _process_schema_table(table, by_table)
