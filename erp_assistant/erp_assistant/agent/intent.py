@@ -64,6 +64,12 @@ def classify(question: str, *, llm_fallback=True) -> str:
     if not q:
         return RECORD_LOOKUP
 
+    # Strip leading punctuation (stray "?" from RTL input, typos like "??how
+    # to...") before the rules below anchor on ^\s* — otherwise a clean
+    # "how to create X" gets pushed past the HOWTO rule straight to
+    # RECORD_LOOKUP just because of a leading symbol.
+    q = re.sub(r'^[\s?!.,;:"\'\-]+', "", q)
+
     for intent, pattern in _RULES:
         if pattern.search(q):
             return intent
