@@ -51,7 +51,7 @@ Open-source AI assistant for ERPNext. Ask business questions in plain English an
 
 10. **Fine-Tuned Embedding Model** — changAI uses a custom fine-tuned embedding model built on nomic-embed-text-v1.5, specifically trained on ERPNext schema and retrieval data for better semantic matching.
 
-11. **Translation Support** — changAI supports multilingual ERP usage by translating values across all DocTypes. This allows users to interact with ERPNext in their preferred language. Users can configure their preferred language directly in ChangAI Settings.
+11. **Translation Support** — changAI supports multilingual ERP usage by translating values across all DocTypes. This allows users to interact with ERPNext in their preferred language. Users can configure their preferred language directly in ERP Assistant Settings.
 
 12. **English & Arabic Language Support** - changAI supports ERP interactions in both English and Arabic, enabling users to query and manage ERP data in their preferred language while preserving master data values accurately.
 
@@ -69,7 +69,7 @@ Open-source AI assistant for ERPNext. Ask business questions in plain English an
     All write operations (Create, Update, Delete) are executed exclusively through
     Frappe ORM and read operations through permission-validated raw SQL.
 
-**You can Enable or Disable ChangAI from "ChangAI Settings Doctype"**
+**You can Enable or Disable ChangAI from "ERP Assistant Settings Doctype"**
 
 ## Tech Stack
 
@@ -161,7 +161,7 @@ To do this, open changAI Settings and click **Download Embedding Model**. Make s
 
 This step is mandatory. changAI needs to index your master tables before it can recognise specific names, records, and values in your queries. Without this sync, questions about specific customers, items, suppliers, or accounts will not return accurate results.
 
-1. Navigate to **Training Tab** in ChangAI Settings.
+1. Navigate to **Training Tab** in ERP Assistant Settings.
 2. Click **Update Master Data** to sync your master tables into the changAI index
 
 **Step 7 — Sync Schema (Optional)**

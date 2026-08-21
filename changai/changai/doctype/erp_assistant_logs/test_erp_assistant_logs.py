@@ -5,5 +5,5 @@
 from frappe.tests.utils import FrappeTestCase
 
 
-class TestChangAIHelpDesk(FrappeTestCase):
+class TestERPAssistantLogs(FrappeTestCase):
 	pass

@@ -22,7 +22,7 @@ of `changai`, they just aren't separate apps anymore:
 
 | Concern | Owns |
 |---|---|
-| `changai/changai/api/v2/` | Chat widget UI, the SQL/RAG pipeline for ERP data questions ("how many users do we have?"), entity creation, report navigation, site-wide settings (`ChangAI Settings`). |
+| `changai/changai/api/v2/` | Chat widget UI, the SQL/RAG pipeline for ERP data questions ("how many users do we have?"), entity creation, report navigation, site-wide settings (`ERP Assistant Settings`). |
 | `changai/changai/erp_assistant/` | "How does *our* ERP work" questions — implementation/config-grounded answers (custom fields, workflows, client scripts, "how do I create X"). No UI of its own; the SQL pipeline calls into it. |
 
 ## 2. Request flow
@@ -142,7 +142,7 @@ CONTEXT) — see `response_format.py`.
 
 If a DocType genuinely isn't in the retrieval index (a custom app's
 DocType added after the last schema sync), no prompt fix helps — the model
-has nothing to ground on. Run **ChangAI Settings → Training tab → Update
+has nothing to ground on. Run **ERP Assistant Settings → Training tab → Update
 Schema / Update Master Data** to reindex.
 
 ## 4a. Troubleshooting — agentic plan → run tools → validate → answer
@@ -244,7 +244,7 @@ stalled for minutes when co-imported with changai's torch/langgraph stack).
 **API key resolution** (`_gemini_headers` in `erp_assistant/llm.py`), first match wins:
 1. `conf.get("api_key")` — `site_config.json`'s `erp_assistant` block (legacy/dev fallback, normally unset)
 2. `frappe.conf.get("gemini_api_key")` — legacy top-level site_config key
-3. `ChangAI Settings.gemini_api_key` — **live source of truth**, editable from Desk (Search → "ChangAI Settings"), no redeploy needed to rotate
+3. `ERP Assistant Settings.gemini_api_key` — **live source of truth**, editable from Desk (Search → "ERP Assistant Settings"), no redeploy needed to rotate
 
 There is deliberately **one** place to configure the key.
 
@@ -383,7 +383,7 @@ deployments.
 
 ## 10. Settings & configuration
 
-- **`ChangAI Settings`** (`changai/changai/doctype/changai_settings/`) — single doctype, the one place to configure: Gemini API key, provider mode (local/remote), voice (Amazon Polly), translation languages, schema/master-data sync, enable/disable the whole assistant.
+- **`ERP Assistant Settings`** (`changai/changai/doctype/erp_assistant_settings/`) — single doctype, the one place to configure: Gemini API key, provider mode (local/remote), voice (Amazon Polly), translation languages, schema/master-data sync, enable/disable the whole assistant.
 - **`site_config.json`** — only non-secret defaults belong here now (`db_*`, unrelated app config). No API keys are hardcoded in site config.
 - Config is read through `ChangAIConfig.get()` (`changai/changai/api/v2/schema_utils.py`), cached on `frappe.local` per request, cleared via `frappe.clear_document_cache`.
 
@@ -410,9 +410,9 @@ deployments.
   live model call each time, not a lookup.
 - `changai/changai/erp_assistant/` has no doctypes/migrations of its own by
   design (pure Python, no UI). Anything needing persistent UI-editable
-  config belongs in `ChangAI Settings`, not a new doctype in that
+  config belongs in `ERP Assistant Settings`, not a new doctype in that
   subpackage.
 - If a custom app's DocType doesn't show up in how-to/implementation
   answers, it's very likely a stale retrieval index, not a code bug — run
-  Update Schema / Update Master Data from ChangAI Settings first before
+  Update Schema / Update Master Data from ERP Assistant Settings first before
   chasing a prompt issue.

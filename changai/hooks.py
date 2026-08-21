@@ -288,7 +288,7 @@ fixtures = [
     {
         "doctype": "Custom Field",
         "filters": [
-            ["dt", "=", "ChangAI Settings"]
+            ["dt", "=", "ERP Assistant Settings"]
         ]
     }
 ]

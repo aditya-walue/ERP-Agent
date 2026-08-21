@@ -19,7 +19,7 @@ async function open_ai_translate_dialog(frm) {
         return;
     }
 
-    const settings = await frappe.db.get_doc("ChangAI Settings");
+    const settings = await frappe.db.get_doc("ERP Assistant Settings");
     const to_language = settings.to_language || __("Unknown Language");
 
     const dialog = new frappe.ui.Dialog({

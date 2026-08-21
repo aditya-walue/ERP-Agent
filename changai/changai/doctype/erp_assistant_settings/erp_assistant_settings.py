@@ -4,7 +4,7 @@
 from frappe.model.document import Document
 
 
-class ChangAISettings(Document):
+class ERPAssistantSettings(Document):
 	pass
 
 def validate(self):

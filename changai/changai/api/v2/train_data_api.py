@@ -24,7 +24,7 @@ BATCH_SIZE = 25
 TABLE_TAG = "[TABLE]"
 FIELD_TAG = "[FIELD]"
 LINK_TAG = "[LINK]"
-CHANGAI_SETTINGS = "ChangAI Settings"
+CHANGAI_SETTINGS = "ERP Assistant Settings"
 VALID_OUTPUT_MESSAGE = "You must output ONLY a valid JSON array."
 GEMINI_JSON_PARSE_FAIL = "Gemini JSON parse failed"
 
@@ -49,7 +49,7 @@ def _get_claude_client():
         frappe.throw(
             _(
                 "Claude API key is not configured.<br><br>"
-                "Please go to <b>ChangAI Settings</b> and enter your <b>Claude API Key</b>.<br><br>"
+                "Please go to <b>ERP Assistant Settings</b> and enter your <b>Claude API Key</b>.<br><br>"
                 "Get your API key from "
                 "<a href='https://console.anthropic.com/account/keys' target='_blank'>Anthropic Console</a>."
             ),
@@ -70,7 +70,7 @@ def _get_openai_client():
         frappe.throw(
             _(
                 "OpenAI API key is not configured.<br><br>"
-                "Please go to <b>Remote Tab in ChangAI Settings</b> and enter your <b>OpenAI API Key</b>.<br><br>"
+                "Please go to <b>Remote Tab in ERP Assistant Settings</b> and enter your <b>OpenAI API Key</b>.<br><br>"
                 "Get your API key from "
                 "<a href='https://platform.openai.com/api-keys' target='_blank'>OpenAI Platform</a>."
             ),

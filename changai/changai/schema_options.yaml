@@ -553,9 +553,9 @@ Cashier Closing:
   - POS-CLO-
 Cashier Closing Payments:
   docstatus: *id001
-ChangAI Chat History:
+ERP Assistant Chat History:
   docstatus: *id001
-ChangAI Logs:
+ERP Assistant Logs:
   docstatus: *id001
 Changelog Feed:
   docstatus: *id001

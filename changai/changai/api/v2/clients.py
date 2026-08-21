@@ -100,7 +100,7 @@ def _get_api_key_client(config):
                 "Gemini API key is not configured.<br><br>"
                 "You have two options to authenticate with Gemini:<br><br>"
                 "<b>Option 1 (Free / API Key):</b><br>"
-                "Go to <b>ChangAI Settings</b> and enter your <b>Gemini API Key</b>.<br>"
+                "Go to <b>ERP Assistant Settings</b> and enter your <b>Gemini API Key</b>.<br>"
                 "Get your free API key from "
                 "<a href='https://aistudio.google.com/app/apikey' target='_blank'>Google AI Studio</a>.<br><br>"
                 "<b>Option 2 (Vertex AI / Service Account):</b><br>"
@@ -154,7 +154,7 @@ def _handle_gemini_api_exception(e: Exception) -> None:
         )
     if isinstance(e, google_exceptions.Unauthenticated):
         frappe.throw(
-            _("Gemini API key is invalid.<br><br>Please go to <b>ChangAI Settings</b> and enter a valid <b>Gemini API Key</b>.<br>"
+            _("Gemini API key is invalid.<br><br>Please go to <b>ERP Assistant Settings</b> and enter a valid <b>Gemini API Key</b>.<br>"
             "Check ChangAI Quick Start Guide 👇:<br><a href='{0}' target='_blank' rel='noopener noreferrer' style='color: #1e90ff;'>Click here</a><br>"
             "<a href='{1}' target='_blank' rel='noopener noreferrer' style='color: #1e90ff;'>ERPGulf.com</a></b>."
 ).format(CHANGAI_GUIDE_LINK,ERPGULF_LINK),

@@ -760,8 +760,8 @@
     }
   },
   {
-    "table_name": "tabChangAI Settings",
-    "text": "SYSTEM: ChangAI Settings - AI configuration and preferences for automated processes | ai_model, api_key, enable_automation, default_language | Use for 'AI integration settings', 'automation preferences', 'AI model selection' | NOT for user-specific settings (use User Settings), NOT for transaction data (use relevant transaction tables)",
+    "table_name": "tabERP Assistant Settings",
+    "text": "SYSTEM: ERP Assistant Settings - AI configuration and preferences for automated processes | ai_model, api_key, enable_automation, default_language | Use for 'AI integration settings', 'automation preferences', 'AI model selection' | NOT for user-specific settings (use User Settings), NOT for transaction data (use relevant transaction tables)",
     "metadata": {
       "module": "SYSTEM",
       "source": "ai_generated"

@@ -165,7 +165,7 @@ def get_embedding_engine():
         _EMBEDDER_INSTANCE = None  # reset if model missing
         frappe.throw(
             _(
-                "Go to <b>ChangAI Settings</b> and click"
+                "Go to <b>ERP Assistant Settings</b> and click"
                 "<a href='{1}' target='_blank' rel='noopener noreferrer' style='color: #1e90ff;'>Download Embedding Model</a></b>.<br><br>"
                 "Check this Quick Start Guide for more detail: "
                 "<a href='{0}' target='_blank' rel='noopener noreferrer' style='color: #1e90ff;'>Click here</a>"

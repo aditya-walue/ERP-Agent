@@ -13,7 +13,7 @@ SUPPORT_SYS_PROMPT = read_asset("support_sys_prompt.txt", base="prompts")
 def create_helpdesk_ticket(subject:str,user:str,email:str,priority:str ="Low", ticket_type: str ="Bug"):
     try:
 
-        doc = frappe.new_doc("ChangAI Help Desk")
+        doc = frappe.new_doc("ERP Assistant Help Desk")
         doc.subject = subject
         doc.description = subject
         doc.customer = user
@@ -68,7 +68,7 @@ def get_user_tickets(ticket_id: int =None):
             filters["name"] = ticket_id
 
         tickets = frappe.get_all(
-            "ChangAI Help Desk",
+            "ERP Assistant Help Desk",
             filters=filters,
             fields=[
                 "name",

@@ -284,7 +284,7 @@ def sync_master_data_smart() -> Dict[str, Any]:
                 rebuilt_rows.append(_build_master_data_row(entity_type, entity_id, title_field, None))   
     final_data = rebuilt_rows
     meta["last_sync"] = str(now_datetime())
-    settings = frappe.get_single("ChangAI Settings")
+    settings = frappe.get_single("ERP Assistant Settings")
     settings.last_masterdata_sync = meta["last_sync"]
     settings.save(ignore_permissions=True)
     payload_out = {"_meta": meta, "data": final_data}
@@ -682,7 +682,7 @@ def sync_tables_and_schema_smart() -> Dict[str, Any]:
     }
     _clean_schema_fields(by_table)
     meta["last_sync"] = str(now_datetime())
-    settings = frappe.get_single("ChangAI Settings")
+    settings = frappe.get_single("ERP Assistant Settings")
     settings.last_schema_sync = meta["last_sync"]
     settings.save(ignore_permissions=True)
 
@@ -702,7 +702,7 @@ def sync_tables_and_schema_smart() -> Dict[str, Any]:
 
 def _get_claude_client() -> Optional[Anthropic]:
     
-    settings = frappe.get_single("ChangAI Settings")
+    settings = frappe.get_single("ERP Assistant Settings")
     api_key = None
     try:
         api_key = settings.get_password("claude_api_key")
@@ -713,7 +713,7 @@ def _get_claude_client() -> Optional[Anthropic]:
         api_key = os.getenv("ANTHROPIC_API_KEY")
 
     if not api_key:
-        frappe.logger().error("Claude API key missing. Set ChangAI Settings claude_api_key or env ANTHROPIC_API_KEY.")
+        frappe.logger().error("Claude API key missing. Set ERP Assistant Settings claude_api_key or env ANTHROPIC_API_KEY.")
         return None
 
     return Anthropic(api_key=api_key)

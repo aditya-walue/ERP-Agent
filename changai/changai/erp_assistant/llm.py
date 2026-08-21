@@ -13,9 +13,9 @@ site_config.json under the "erp_assistant" key, e.g.:
     }
 
 The Gemini API key itself is never hardcoded here or in site_config — it's
-read from ChangAI Settings (single doctype, Desk UI), the one place this repo
+read from ERP Assistant Settings (single doctype, Desk UI), the one place this repo
 already has a UI-editable Gemini key. See _changai_gemini_key() below. An
-admin rotates it from ChangAI Settings and every provider call picks up the
+admin rotates it from ERP Assistant Settings and every provider call picks up the
 new key immediately, no restart.
 
 Supported providers: "ollama" (local, free, private), "gemini", "groq"
@@ -168,10 +168,10 @@ def _chunk_by_char_budget(texts, budget=_EMBED_CHAR_BUDGET, max_items=_EMBED_BAT
 
 
 def _changai_gemini_key():
-    """Fall back to the key configured in ChangAI Settings (single doctype),
+    """Fall back to the key configured in ERP Assistant Settings (single doctype),
     so the Gemini key only needs to be set in one place."""
     try:
-        return frappe.db.get_single_value("ChangAI Settings", "gemini_api_key")
+        return frappe.db.get_single_value("ERP Assistant Settings", "gemini_api_key")
     except Exception:
         return None
 

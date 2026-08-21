@@ -9,7 +9,7 @@ def get_meta(doc:str):
 def get_doctype(doc:str,docname: str):
     return frappe.get_doc(doc, docname)
 def get_settings():
-    return frappe.get_single("ChangAI Settings")
+    return frappe.get_single("ERP Assistant Settings")
 
 
 _CLAUDE_CLIENT = None
@@ -62,7 +62,7 @@ def translate_and_store(docname: str, doctype: str, from_field: str, to_field: s
         frappe.throw(
             _(
                 "Claude API key is not configured.<br><br>"
-                "Please go to <b>Remote Tab in ChangAI Settings</b> and enter your <b>Claude API Key</b>.<br><br>"
+                "Please go to <b>Remote Tab in ERP Assistant Settings</b> and enter your <b>Claude API Key</b>.<br><br>"
                 "Get your API key from "
                 "<a href='https://console.anthropic.com/account/keys' target='_blank'>Anthropic Console</a>."
             ),
@@ -87,7 +87,7 @@ def translate_and_store(docname: str, doctype: str, from_field: str, to_field: s
         frappe.throw(
             _(
                 "Claude API key is invalid.<br><br>"
-                "Please go to <b>ChangAI Settings</b> and enter a valid <b>Claude API Key</b>."
+                "Please go to <b>ERP Assistant Settings</b> and enter a valid <b>Claude API Key</b>."
             ),
             title=_("Invalid Claude API Key")
         )

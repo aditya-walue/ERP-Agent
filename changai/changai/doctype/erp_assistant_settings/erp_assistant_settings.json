@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "section_break_ubdl",
-  "enable_changai",
+  "enable_erp_assistant",
   "gemini_authentication_free_tier",
   "gemini_api_key",
   "server_section",
@@ -382,9 +382,9 @@
   },
   {
    "default": "1",
-   "fieldname": "enable_changai",
+   "fieldname": "enable_erp_assistant",
    "fieldtype": "Check",
-   "label": "Enable changAI"
+   "label": "Enable ERP Assistant"
   },
   {
    "fieldname": "section_break_ubdl",
@@ -411,7 +411,7 @@
  "modified": "2026-06-24 13:36:59.025672",
  "modified_by": "Administrator",
  "module": "Changai",
- "name": "ChangAI Settings",
+ "name": "ERP Assistant Settings",
  "owner": "Administrator",
  "permissions": [
   {

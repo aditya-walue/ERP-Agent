@@ -45,7 +45,7 @@ async function loadSettings() {
   isLoadingSettings.value = true
   try {
     settings.value = await getSettingsDetails(responseMode.value)
-    enableChangaiWidget.value = Boolean(settings.value?.enable_changai)
+    enableChangaiWidget.value = Boolean(settings.value?.enable_erp_assistant)
     debugLogs.value.push({ type: 'settings', settings: settings.value })
   } catch (err) {
     const errorText = getErrorText(err)

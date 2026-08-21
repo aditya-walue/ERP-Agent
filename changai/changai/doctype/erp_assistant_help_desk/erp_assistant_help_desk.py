@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class ChangAIHelpDesk(Document):
+class ERPAssistantHelpDesk(Document):
 	pass

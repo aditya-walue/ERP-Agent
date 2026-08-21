@@ -30,7 +30,7 @@ class LocalEmbeddingService(Embeddings):
 # ---------------------------------------------------------------------------
 # Gemini (hosted, free-tier) — no local model to download or run. Reuses the
 # same cached client and Gemini API key as chat (clients.gemini_client(),
-# fed from ChangAI Settings), so there is nothing new to configure. Batching
+# fed from ERP Assistant Settings), so there is nothing new to configure. Batching
 # and retry mirror erp_assistant/llm.py's _gemini_embed, the proven pattern
 # already used for this same API elsewhere in this repo.
 # ---------------------------------------------------------------------------

@@ -21,7 +21,7 @@ ERPGULF_LINK = "https://app.erpgulf.com/en/products/chang-ai-an-ai-agent"
 # settingsUrl = frappe.utils.get_url(
 #     "/app/changai-settings/ChangAI%20Settings"
 # )
-CHANGAI_SETTINGS = "ChangAI Settings"
+CHANGAI_SETTINGS = "ERP Assistant Settings"
 _ASSETS_DIR = Path(frappe.get_app_path("changai", "changai", "api", "v2", "assets")).resolve()
 _PROMPTS_DIR = Path(frappe.get_app_path("changai", "changai", "prompts")).resolve()
 _PHONETIC_BUCKETS = defaultdict(list)
@@ -274,7 +274,7 @@ def is_master_data_changed(last_sync: str, stored_data: list):
 def check_file_updates(file_name: str):
     RAG_FOLDER = "Home/RAG Sources"
     from changai.changai.api.v2.build_cards_faiss_index_v2 import _read_file_doc
-    settings = frappe.get_single("ChangAI Settings")
+    settings = frappe.get_single("ERP Assistant Settings")
 
     if file_name == "master_data.yaml":
         last_sync = settings.last_masterdata_sync
@@ -566,7 +566,7 @@ def _build_frontend_settings_config() -> Dict[str, Any]:
         "aws_region": aws_region,
         "polly_voice_id": "Zayd",
         "polly_enabled": bool(settings.enable_voice_chat and aws_access_key_id and aws_secret_access_key),
-        "enable_changai": bool(settings.enable_changai)
+        "enable_erp_assistant": bool(settings.enable_erp_assistant)
     }
 
 

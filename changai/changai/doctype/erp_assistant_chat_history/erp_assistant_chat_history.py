@@ -4,5 +4,5 @@
 from frappe.model.document import Document
 
 
-class ChangAIChatHistory(Document):
+class ERPAssistantChatHistory(Document):
 	pass

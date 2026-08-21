@@ -2,7 +2,7 @@ import json
 import frappe
 from typing import Any, Optional, Dict
 from rapidfuzz import fuzz
-CHANGAI_CHAT_HIST_DOC = "ChangAI Chat History"
+CHANGAI_CHAT_HIST_DOC = "ERP Assistant Chat History"
 
 def save_logs(
     user_question: Optional[str] = None,
@@ -26,7 +26,7 @@ def save_logs(
         return v
     
     MAX_LOG_LEN = 140
-    doc = frappe.new_doc("ChangAI Logs")
+    doc = frappe.new_doc("ERP Assistant Logs")
     doc.user_question = user_question
     doc.payload = json.dumps(payload) if payload else None
     safe_question=(formatted_q[:137] + "..." if formatted_q and len(formatted_q) > MAX_LOG_LEN else formatted_q or "")
@@ -125,7 +125,7 @@ def get_chat_history(session_id: str) -> list:
 @frappe.whitelist(allow_guest=False)
 def respond_from_cache(user_question:str):
     if user_question:
-        doc=frappe.db.get_value("ChangAI Logs",{"user_question":user_question},["sql_generated","result"],as_dict=False)
+        doc=frappe.db.get_value("ERP Assistant Logs",{"user_question":user_question},["sql_generated","result"],as_dict=False)
         return doc
 
 PROMPT_FOLLOWUP = """You are an ERP query rewriter and entity detector.
@@ -201,7 +201,7 @@ User Question:
 {qstn}"""
 def find_similar_log_question(new_question: str, threshold: int = 98):
     logs = frappe.get_all(
-        "ChangAI Logs",
+        "ERP Assistant Logs",
         fields=[
             "name",
             "user_question",
@@ -321,7 +321,7 @@ def _get_sql_error_message(err: Any, val: Dict) -> str:
 
 def get_last_thread_message(chat_id: str):
     data = frappe.get_all(
-        "ChangAI Chat History",
+        "ERP Assistant Chat History",
         filters={"session_id": chat_id},
         fields=["content"],
         order_by="creation asc"

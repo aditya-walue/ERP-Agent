@@ -1174,7 +1174,7 @@ def _handle_non_erp_(non_erp_res,formatted_q,err,user_question: str,request_id:s
             save_turn_2(session_id=chat_id, user_text=formatted_q or user_question, bot_text=non_erp_res,type_="non_erp")
             save_logs(user_question=user_question, formatted_q="Not formatted as its NONERP",err="None", result=non_erp_res,type_="NonERP")
         except Exception as e:
-            frappe.log_error(f"Failed to save NON_ERP logs: {e}", "ChangAI Logs")
+            frappe.log_error(f"Failed to save NON_ERP logs: {e}", "ERP Assistant Logs")
             save_logs(user_question=user_question, formatted_q="Not formatted as its NONERP",err=str(e), result=non_erp_res,type_="NonERP")
     return {"Question": user_question, "Formatted-Question": formatted_q, "Bot": non_erp_res}
 

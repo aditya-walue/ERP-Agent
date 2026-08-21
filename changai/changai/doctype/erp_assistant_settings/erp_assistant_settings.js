@@ -1,6 +1,6 @@
 // Copyright (c) 2026, ERPGulf and contributors
 // For license information, please see license.txt
-frappe.ui.form.on("ChangAI Settings", {
+frappe.ui.form.on("ERP Assistant Settings", {
     refresh: async function (frm) {
         const schema_wrapper = frm.fields_dict.update_schema_file.$wrapper;
         const master_wrapper = frm.fields_dict.update_masterdata_file.$wrapper;
