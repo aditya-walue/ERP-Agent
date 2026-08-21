@@ -23,7 +23,12 @@
                 <path fill="currentColor" d="M12 2.8c.52 3.22 1.6 5.66 3.22 7.28 1.62 1.62 4.06 2.7 7.28 3.22-3.22.52-5.66 1.6-7.28 3.22-1.62 1.62-2.7 4.06-3.22 7.28-.52-3.22-1.6-5.66-3.22-7.28-1.62-1.62-4.06-2.7-7.28-3.22 3.22-.52 5.66-1.6 7.28-3.22 1.62-1.62 2.7-4.06 3.22-7.28Z"/>
               </svg>
             </span>
-            <span class="text-[8px] font-semibold tracking-[0.12em] uppercase text-[#3a67c9]">{{ loaderLabel }}</span>
+            <span class="sr-only">{{ loaderLabel }}</span>
+            <span class="inline-flex items-center gap-1" aria-hidden="true">
+              <span class="h-1.5 w-1.5 rounded-full bg-[#3a67c9] motion-safe:animate-dot-wave" style="animation-delay: 0ms"></span>
+              <span class="h-1.5 w-1.5 rounded-full bg-[#3a67c9] motion-safe:animate-dot-wave" style="animation-delay: 160ms"></span>
+              <span class="h-1.5 w-1.5 rounded-full bg-[#3a67c9] motion-safe:animate-dot-wave" style="animation-delay: 320ms"></span>
+            </span>
           </div>
         </div>
       </div>

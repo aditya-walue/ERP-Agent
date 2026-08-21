@@ -350,17 +350,24 @@ def naming_series_check(ctx: ToolContext) -> List[ToolResult]:
 
 
 def error_log_check(ctx: ToolContext) -> List[ToolResult]:
+    if not ctx.doctype:
+        # No resolved DocType means no ERP-specific grounding for this
+        # question at all (e.g. gibberish input) — falling back to whatever
+        # is in the Error Log regardless of relevance would hand the model
+        # a real but unrelated error to present as "the cause". Every other
+        # tool already skips cleanly on a missing doctype; match that here.
+        return _skip("error_log_check", "no DocType identified for this question")
+
     filters = {"creation": [">", frappe.utils.add_to_date(None, minutes=-30)]}
-    if ctx.doctype:
-        # Error Log doesn't always tag reference_doctype, so this is a
-        # best-effort narrowing, not a hard filter.
-        doctype_matches = frappe.get_all(
-            "Error Log", filters={**filters, "reference_doctype": ctx.doctype},
-            fields=["name", "method", "error", "creation"],
-            order_by="creation desc", limit=3,
-        )
-        if doctype_matches:
-            return _error_log_result(doctype_matches)
+    # Error Log doesn't always tag reference_doctype, so this is a
+    # best-effort narrowing, not a hard filter.
+    doctype_matches = frappe.get_all(
+        "Error Log", filters={**filters, "reference_doctype": ctx.doctype},
+        fields=["name", "method", "error", "creation"],
+        order_by="creation desc", limit=3,
+    )
+    if doctype_matches:
+        return _error_log_result(doctype_matches)
 
     recent = frappe.get_all(
         "Error Log", filters=filters,

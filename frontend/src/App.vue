@@ -103,14 +103,8 @@ async function handleChatSubmit(message) {
   const step = `${msg.message} (${seconds}s)`
   steps.push(step)
   currentDebug.value = step
-  thinkingMsg.text = msg.message
-  thinkingMsg.statusType = 'pipeline'
 }
 
-  if (!msg.done && msg.message) {
-    thinkingMsg.text = msg.message
-    thinkingMsg.statusType = 'pipeline'
-  }
 if (msg.done) {
   thinkingMsg.cancelable = false
 
